@@ -1,0 +1,146 @@
+.glass-panel,
+.card {
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  background: var(--glass);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.glass-panel {
+  padding: 32px;
+}
+
+.card {
+  padding: 24px;
+}
+
+.hero {
+  display: grid;
+  min-height: calc(100vh - 168px);
+  place-items: center;
+  text-align: center;
+}
+
+.hero h1 {
+  max-width: 760px;
+  margin: 0 auto 16px;
+  font-size: clamp(2.5rem, 7vw, 5.25rem);
+}
+
+.hero p {
+  max-width: 650px;
+  margin: 0 auto 28px;
+  color: var(--text-muted);
+  font-size: clamp(1.05rem, 2vw, 1.25rem);
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  border: 1px solid var(--glass-border);
+  border-radius: 999px;
+  padding: 12px 18px;
+  background: var(--glass);
+  color: var(--white-soft);
+  font-weight: 800;
+  text-decoration: none;
+  transition: transform 240ms var(--ease-cinematic), background 240ms ease;
+}
+
+.button:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.button-primary {
+  border-color: transparent;
+  background: var(--teal);
+  color: #021217;
+}
+
+.button-primary:hover {
+  background: var(--aqua-glow);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.auth-card {
+  max-width: 520px;
+  margin: 72px auto;
+}
+
+.auth-card form,
+.auth-card label,
+.auth-card input {
+  display: block;
+  width: 100%;
+}
+
+.auth-card label {
+  margin-top: 18px;
+  font-weight: 800;
+}
+
+.auth-card input,
+.voice-panel input,
+.mindmap-toolbar input {
+  min-height: 48px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  color: var(--white-soft);
+  background: rgba(2, 17, 29, 0.72);
+}
+
+.auth-card .button {
+  width: 100%;
+  margin-top: 24px;
+}
+
+.error-message {
+  border-left: 4px solid var(--rose-soft);
+  padding: 10px 14px;
+  background: rgba(255, 159, 178, 0.12);
+}
+
+.demo-link {
+  text-align: center;
+}
+
+.eyebrow {
+  color: var(--aqua-glow);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.page-heading {
+  margin-bottom: 28px;
+}
+
+.page-heading h1 {
+  font-size: clamp(2.2rem, 6vw, 4.5rem);
+  margin: 8px 0;
+}

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}MindMitra - Memory Companion{% endblock %}
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cinematic.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="hero" aria-labelledby="hero-title">
+  <div class="glass-panel">
+    <h1 id="hero-title">Every memory deserves a constellation.</h1>
+    <p>
+      MindMitra is a calm, supportive space for familiar faces, memories,
+      reminders, and gentle cognitive engagement.
+    </p>
+    <div class="button-row" aria-label="Choose MindMitra mode">
+      <a class="button button-primary" href="{{ url_for('patient') }}">Patient Mode</a>
+      <a class="button" href="{{ url_for('login') }}">Caregiver Login</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

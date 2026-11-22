@@ -1,0 +1,57 @@
+.game-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.game-card {
+  min-height: 190px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  color: var(--white-soft);
+  background: var(--glass);
+  text-align: left;
+  cursor: pointer;
+}
+
+.game-card span {
+  color: var(--gold-memory);
+  font-size: 2.4rem;
+}
+
+.game-card h2 {
+  margin-bottom: 4px;
+}
+
+.game-console {
+  max-width: 720px;
+}
+
+.game-console input {
+  width: 100%;
+  margin: 8px 0 18px;
+}
+
+.game-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.game-options button {
+  min-height: 48px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  color: var(--white-soft);
+  background: rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+}
+
+@media (max-width: 720px) {
+  .game-grid,
+  .game-options {
+    grid-template-columns: 1fr;
+  }
+}

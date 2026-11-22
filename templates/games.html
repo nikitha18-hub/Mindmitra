@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Memory Games - MindMitra{% endblock %}
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/games.css') }}">
+{% endblock %}
+{% block content %}
+<section aria-labelledby="games-title">
+  <header class="page-heading">
+    <p class="eyebrow">Gentle practice</p>
+    <h1 id="games-title">Memory Games</h1>
+  </header>
+  <div class="game-grid">
+    <button class="game-card" type="button" data-game="picture-match">
+      <span aria-hidden="true">◉</span><h2>Picture Match</h2><p>Find the matching memory.</p>
+    </button>
+    <button class="game-card" type="button" data-game="pattern">
+      <span aria-hidden="true">◆</span><h2>Pattern</h2><p>Repeat a calm shape pattern.</p>
+    </button>
+    <button class="game-card" type="button" data-game="attention">
+      <span aria-hidden="true">✦</span><h2>Attention</h2><p>Notice the highlighted star.</p>
+    </button>
+  </div>
+  <section class="glass-panel game-console" aria-labelledby="game-console-title">
+    <h2 id="game-console-title">Picture Match</h2>
+    <label for="difficulty">Difficulty</label>
+    <input id="difficulty" type="range" min="1" max="5" value="1">
+    <div class="game-options" aria-label="Picture choices">
+      <button type="button" data-answer="Garden">Garden</button>
+      <button type="button" data-answer="Music">Music</button>
+      <button type="button" data-answer="Family">Family</button>
+    </div>
+    <p id="game-feedback" aria-live="polite">Choose the picture that feels familiar.</p>
+  </section>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/games.js') }}" defer></script>
+{% endblock %}

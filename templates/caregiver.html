@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Caregiver Mission Control - MindMitra{% endblock %}
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/caregiver.css') }}">
+{% endblock %}
+{% block content %}
+<section class="caregiver-shell" aria-labelledby="caregiver-title">
+  <aside class="caregiver-nav" aria-label="Caregiver tools">
+    <strong>MindMitra</strong>
+    <a href="#patients">Patients</a>
+    <a href="#activity">Activity</a>
+    <a href="{{ url_for('reminders') }}">Reminders</a>
+  </aside>
+  <div class="caregiver-main">
+    <header class="status-bar">
+      <div><p class="eyebrow">Caregiver workspace</p><h1 id="caregiver-title">Mission Control</h1></div>
+      <span class="status-pill" id="caregiver-status">Demo mode</span>
+    </header>
+    <div class="caregiver-grid">
+      <article class="glass-panel" id="patients"><h2>Demo Patient</h2><p>Asha · Fictional profile</p></article>
+      <article class="glass-panel" id="activity"><h2>Today</h2><div class="progress-ring" aria-label="Activity 68 percent"><span>68%</span></div></article>
+      <article class="glass-panel"><h2>Recent memories</h2><p>Garden, birthday, music</p></article>
+      <article class="glass-panel"><h2>Game progress</h2><canvas id="progress-chart" aria-label="Game progress chart" role="img"></canvas></article>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/caregiver.js') }}" defer></script>
+{% endblock %}
