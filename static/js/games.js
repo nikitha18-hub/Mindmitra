@@ -2,6 +2,22 @@
   const feedback = document.querySelector("#game-feedback");
   const difficulty = document.querySelector("#difficulty");
   if (!feedback || !difficulty) return;
+  const roundStatus = document.createElement("p");
+  roundStatus.setAttribute("aria-live", "polite");
+  feedback.insertAdjacentElement("afterend", roundStatus);
+
+  const loadRound = async (game) => {
+    const response = await fetch(`/api/games/${game}/round?difficulty=${difficulty.value}`);
+    if (!response.ok) return;
+    const round = await response.json();
+    if (game === "pattern") {
+      roundStatus.textContent = `Pattern: ${round.sequence.join(" → ")}`;
+    } else if (game === "attention") {
+      roundStatus.textContent = `${round.stars} stars are shown. Notice the glowing star.`;
+    } else {
+      roundStatus.textContent = `Memory target: ${round.target}`;
+    }
+  };
 
   let activeGame = "picture-match";
   document.querySelectorAll("[data-game]").forEach((card) => {
@@ -12,6 +28,7 @@
       feedback.textContent = activeGame === "picture-match"
         ? "Choose the picture that feels familiar."
         : "Choose the gentle action that comes next.";
+      loadRound(activeGame);
     });
   });
 

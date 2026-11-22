@@ -15,9 +15,23 @@ from werkzeug.utils import secure_filename
 
 from app.database import get_db
 from ai_engine.difficulty import recommend_difficulty
+from games.attention_game import create_round as create_attention_round
+from games.memory_game import create_round as create_memory_round
+from games.pattern_game import create_pattern
 
 
 def register_routes(app):
+    @app.get("/api/games/<game>/round")
+    def game_round(game):
+        level = request.args.get("difficulty", 1, type=int)
+        level = max(1, min(5, level))
+        if game == "attention":
+            return jsonify(create_attention_round(level))
+        if game == "pattern":
+            return jsonify(create_pattern(level))
+        if game == "picture-match":
+            return jsonify(create_memory_round())
+        return jsonify({"error": "Unknown game."}), 404
     @app.get("/healthz")
     def healthz():
         connection = get_db(app)

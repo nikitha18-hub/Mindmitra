@@ -73,6 +73,12 @@
       resize();
       draw();
       status.textContent = `${nodes.length} memory nodes loaded.`;
+      const source = document.querySelector("#edge-source");
+      const target = document.querySelector("#edge-target");
+      if (source && target) {
+        source.innerHTML = nodes.map((node) => `<option value="${node.id}">${node.label}</option>`).join("");
+        target.innerHTML = nodes.map((node) => `<option value="${node.id}">${node.label}</option>`).join("");
+      }
     } catch (error) {
       status.textContent = "The memory map could not load.";
     }
@@ -181,6 +187,26 @@
       } else {
         editorStatus.textContent = "Caregiver sign-in is required.";
       }
+    });
+
+    document.querySelector("#connect-selected-nodes").addEventListener("click", async () => {
+      const patientId = document.querySelector("#mindmap-data")?.dataset.patientId || "1";
+      const source = document.querySelector("#edge-source").value;
+      const target = document.querySelector("#edge-target").value;
+      if (!source || !target) return;
+      const response = await fetch("/api/mindmap/edges", {
+        method: "POST",
+        headers: {"Content-Type": "application/json", "X-CSRF-Token": csrfToken},
+        body: JSON.stringify({
+          patient_id: Number(patientId),
+          source: Number(source),
+          target: Number(target),
+        }),
+      });
+      editorStatus.textContent = response.ok
+        ? "Memory connection added."
+        : "Caregiver sign-in is required.";
+      if (response.ok) load();
     });
   }
   load();

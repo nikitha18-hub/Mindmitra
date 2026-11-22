@@ -36,10 +36,15 @@
       <option>Family</option><option>Places</option><option>Events</option>
       <option>Interests</option><option>Friends</option>
     </select>
+    <label for="edge-source">Connect from</label>
+    <select id="edge-source"></select>
+    <label for="edge-target">Connect to</label>
+    <select id="edge-target"></select>
     <div class="button-row">
       <button class="button button-primary" type="submit">Add memory node</button>
       <button class="button" type="button" id="update-selected-node">Update selected</button>
       <button class="button" type="button" id="delete-selected-node">Delete selected</button>
+      <button class="button" type="button" id="connect-selected-nodes">Connect nodes</button>
     </div>
     <p id="mindmap-editor-status" aria-live="polite"></p>
   </form>

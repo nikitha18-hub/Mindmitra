@@ -11,3 +11,13 @@ def test_game_session_saved():
     )
     assert response.status_code == 201
     assert response.get_json()["score"] == 100
+
+
+def test_game_round_endpoints():
+    app = create_app()
+    app.config["TESTING"] = True
+    client = app.test_client()
+    for game in ("picture-match", "attention", "pattern"):
+        response = client.get(f"/api/games/{game}/round?difficulty=3")
+        assert response.status_code == 200
+        assert isinstance(response.get_json(), dict)
