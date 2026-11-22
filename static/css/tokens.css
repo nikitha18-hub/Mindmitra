@@ -1,0 +1,19 @@
+:root {
+  --bg-deep: #04111d;
+  --bg-mid: #0a2a3f;
+  --teal: #1fb5a8;
+  --aqua-glow: #5ff2e0;
+  --sky: #4aa8ff;
+  --white-soft: #f4fbff;
+  --gold-memory: #ffd98a;
+  --rose-soft: #ff9fb2;
+  --glass: rgba(255, 255, 255, 0.08);
+  --glass-border: rgba(255, 255, 255, 0.18);
+  --text-muted: #c3d6df;
+  --shadow-soft: 0 18px 48px rgba(2, 15, 26, 0.32);
+  --ease-cinematic: cubic-bezier(.22, 1, .36, 1);
+  --radius-lg: 24px;
+  --radius-md: 16px;
+  --radius-sm: 12px;
+  --focus-ring: #ffd98a;
+}

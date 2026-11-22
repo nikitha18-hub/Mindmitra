@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Patient Home - MindMitra{% endblock %}
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/patient.css') }}">
+{% endblock %}
+{% block content %}
+<section aria-labelledby="patient-title">
+  <header class="patient-header">
+    <p class="eyebrow">Patient Mode</p>
+    <h1 id="patient-title">Good day, Asha</h1>
+  </header>
+
+  <div class="patient-grid">
+    <a class="patient-tile" href="{{ url_for('dashboard') }}"><span>Today</span><strong>My day</strong></a>
+    <a class="patient-tile" href="{{ url_for('games') }}"><span>Games</span><strong>Memory practice</strong></a>
+    <a class="patient-tile" href="{{ url_for('memory_library') }}"><span>Photos</span><strong>Family photos</strong></a>
+    <a class="patient-tile" href="{{ url_for('memory_map') }}"><span>Map</span><strong>My memory map</strong></a>
+    <a class="patient-tile" href="{{ url_for('reminders') }}"><span>Reminders</span><strong>My next steps</strong></a>
+    <button class="patient-tile" type="button" id="talk-button"><span>Talk</span><strong>Ask MindMitra</strong></button>
+  </div>
+
+  <article class="glass-panel reminder-card" aria-labelledby="next-reminder">
+    <p class="eyebrow">Next reminder</p>
+    {% if next_reminder %}
+    <h2 id="next-reminder">{{ next_reminder.title }}</h2>
+    <p>At {{ next_reminder.time_label }}</p>
+    {% else %}
+    <h2 id="next-reminder">Nothing urgent right now</h2>
+    <p>Enjoy a calm moment.</p>
+    {% endif %}
+  </article>
+
+  <section class="glass-panel voice-panel" aria-labelledby="voice-title">
+    <h2 id="voice-title">Talk to MindMitra</h2>
+    <button class="voice-orb" type="button" aria-label="Start voice question" id="voice-orb">Mic</button>
+    <form id="voice-text-form">
+      <label for="voice-text">Type instead</label>
+      <div class="text-row">
+        <input id="voice-text" name="question" placeholder="What would you like to remember?">
+        <button class="button" type="submit">Send</button>
+      </div>
+    </form>
+    <p id="voice-status" aria-live="polite">Voice or text is available.</p>
+  </section>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/patient.js') }}" defer></script>
+{% endblock %}

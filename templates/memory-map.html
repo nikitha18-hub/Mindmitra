@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Memory Map - MindMitra{% endblock %}
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/mindmap.css') }}">
+{% endblock %}
+{% block content %}
+<section aria-labelledby="mindmap-title">
+  <div id="mindmap-data" data-patient-id="{{ patient_id }}" hidden></div>
+  <header class="page-heading">
+    <p class="eyebrow">Living constellation</p>
+    <h1 id="mindmap-title">Asha's Memory Map</h1>
+  </header>
+  <div class="mindmap-toolbar" role="toolbar" aria-label="Memory map tools">
+    <label for="node-search">Search memories</label>
+    <input id="node-search" type="search" placeholder="Search a name or place">
+    <button class="button" type="button" id="fit-map">Fit view</button>
+  </div>
+  <div class="mindmap-layout">
+    <canvas id="memory-canvas" aria-label="Interactive constellation map"></canvas>
+    <aside class="glass-panel memory-detail" aria-live="polite">
+      <p class="eyebrow">Selected memory</p>
+      <h2 id="memory-label">Asha</h2>
+      <p id="memory-description">This is Asha.</p>
+      <button class="button" type="button" id="read-memory">Read aloud</button>
+    </aside>
+  </div>
+  {% if current_role == "caregiver" %}
+  <form class="glass-panel mindmap-editor" id="mindmap-editor">
+    <h2>Edit constellation</h2>
+    <label for="node-label">Name</label>
+    <input id="node-label" name="label" required>
+    <label for="node-description">Memory</label>
+    <input id="node-description" name="description">
+    <label for="node-category">Category</label>
+    <select id="node-category" name="category">
+      <option>Family</option><option>Places</option><option>Events</option>
+      <option>Interests</option><option>Friends</option>
+    </select>
+    <label for="edge-source">Connect from</label>
+    <select id="edge-source"></select>
+    <label for="edge-target">Connect to</label>
+    <select id="edge-target"></select>
+    <div class="button-row">
+      <button class="button button-primary" type="submit">Add memory node</button>
+      <button class="button" type="button" id="update-selected-node">Update selected</button>
+      <button class="button" type="button" id="delete-selected-node">Delete selected</button>
+      <button class="button" type="button" id="connect-selected-nodes">Connect nodes</button>
+    </div>
+    <p id="mindmap-editor-status" aria-live="polite"></p>
+  </form>
+  {% endif %}
+  <p id="mindmap-status" aria-live="polite"></p>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/mindmap.js') }}" defer></script>
+{% endblock %}

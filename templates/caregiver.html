@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Caregiver Mission Control - MindMitra{% endblock %}
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/caregiver.css') }}">
+{% endblock %}
+{% block content %}
+<section class="caregiver-shell" aria-labelledby="caregiver-title">
+  <aside class="caregiver-nav" aria-label="Caregiver tools">
+    <strong>MindMitra</strong>
+    <a href="#patients">Patients</a>
+    <a href="#activity">Activity</a>
+    <a href="{{ url_for('reminders') }}">Reminders</a>
+  </aside>
+  <div class="caregiver-main">
+    <header class="status-bar">
+      <div><p class="eyebrow">Caregiver workspace</p><h1 id="caregiver-title">Mission Control</h1></div>
+      <span class="status-pill" id="caregiver-status">Demo mode</span>
+    </header>
+    <div class="caregiver-grid">
+      <article class="glass-panel" id="patients">
+        <h2>Patients</h2>
+        {% for patient in patients %}<p>{{ patient.name }} · {{ patient.username }}</p>{% else %}<p>No patients yet.</p>{% endfor %}
+      </article>
+      <article class="glass-panel" id="activity"><h2>Today</h2><div class="progress-ring" aria-label="Activity 68 percent"><span>68%</span></div></article>
+      <article class="glass-panel"><h2>Recent memories</h2>
+        {% for memory in recent_memories %}<p>{{ memory.title }}</p>{% else %}<p>No memories yet.</p>{% endfor %}
+      </article>
+      <article class="glass-panel"><h2>Game progress</h2>
+        <canvas id="progress-chart" aria-label="Game progress chart" role="img"></canvas>
+        {% if game_stats %}{% for stat in game_stats %}<p>{{ stat.game }}: {{ stat.average_score|round|int }}%</p>{% endfor %}{% else %}<p>Play a game to build progress.</p>{% endif %}
+      </article>
+      <article class="glass-panel" id="reminder-manager">
+        <h2>Add a reminder</h2>
+        <form id="caregiver-reminder-form">
+          <label for="reminder-title">Routine</label>
+          <input id="reminder-title" name="title" required>
+          <label for="reminder-time">Time</label>
+          <input id="reminder-time" name="time_label" type="time" required>
+          <button class="button button-primary" type="submit">Add reminder</button>
+          <p id="caregiver-form-status" aria-live="polite"></p>
+        </form>
+      </article>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/caregiver.js') }}" defer></script>
+{% endblock %}

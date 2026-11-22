@@ -1,0 +1,45 @@
+.hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.landing-galaxy {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+.hero::before,
+.hero::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.28;
+  animation: drift 12s ease-in-out infinite alternate;
+}
+
+.hero::before {
+  top: 12%;
+  left: 8%;
+  background: var(--sky);
+}
+
+.hero::after {
+  right: 8%;
+  bottom: 10%;
+  background: var(--teal);
+  animation-delay: -4s;
+}
+
+@keyframes drift {
+  to { transform: translate3d(28px, -18px, 0) scale(1.12); }
+}

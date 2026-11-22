@@ -1,0 +1,105 @@
+.mindmap-toolbar {
+  display: grid;
+  grid-template-columns: auto minmax(180px, 320px) auto;
+  align-items: end;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.mindmap-layout {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  min-height: 560px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 50%, rgba(79,168,255,.10), transparent 65%);
+}
+
+#memory-canvas {
+  width: 100%;
+  min-height: 560px;
+  cursor: pointer;
+}
+
+.memory-detail {
+  margin: 16px;
+  align-self: center;
+}
+
+.mindmap-editor {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.mindmap-editor input,
+.mindmap-editor select {
+  min-height: 48px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  color: var(--white-soft);
+  background: rgba(2,17,29,.72);
+}
+
+.memory-library {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.memory-photo {
+  min-height: 240px;
+  text-align: center;
+}
+
+.memory-photo span {
+  display: block;
+  color: var(--gold-memory);
+  font-size: 4rem;
+}
+
+.reminder-timeline {
+  display: grid;
+  gap: 14px;
+  max-width: 760px;
+}
+
+.reminder-item {
+  display: grid;
+  grid-template-columns: 90px 1fr auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.reminder-item time {
+  color: var(--aqua-glow);
+  font-weight: 800;
+}
+
+.reminder-item.completed {
+  border-color: var(--aqua-glow);
+  background: rgba(31, 181, 168, 0.16);
+}
+
+@media (max-width: 820px) {
+  .mindmap-toolbar,
+  .mindmap-layout,
+  .memory-library {
+    grid-template-columns: 1fr;
+  }
+
+  #memory-canvas {
+    min-height: 420px;
+  }
+
+  .reminder-item {
+    grid-template-columns: 70px 1fr;
+  }
+
+  .reminder-item button {
+    grid-column: 1 / -1;
+  }
+}
