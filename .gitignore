@@ -10,3 +10,7 @@ node_modules/
 static/uploads/
 uploads/
 *.pyc
+instance/
+.env.*
+!.env.example
+.DS_Store

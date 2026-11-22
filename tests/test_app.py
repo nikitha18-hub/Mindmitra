@@ -15,6 +15,7 @@ def client():
     [
         ("/", 200),
         ("/login", 200),
+        ("/register", 200),
         ("/patient", 200),
         ("/dashboard", 200),
         ("/caregiver", 200),
@@ -37,6 +38,19 @@ def test_index_extends_shared_layout(client):
     assert "Skip to main content" in page
     assert "Calm Mode" in page
     assert "Patient Mode" in page
+
+
+def test_health_endpoint(client):
+    response = client.get("/healthz")
+    assert response.status_code == 200
+    assert response.get_json()["status"] == "ok"
+
+
+def test_production_requires_secret(monkeypatch):
+    monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.delenv("SECRET_KEY", raising=False)
+    with pytest.raises(RuntimeError, match="SECRET_KEY"):
+        create_app()
 
 
 def test_caregiver_api_requires_role_without_session():
@@ -71,3 +85,22 @@ def test_login_accepts_demo_caregiver(tmp_path):
         },
     )
     assert response.status_code == 302
+
+
+def test_registration_creates_patient(tmp_path):
+    app = create_app(f"sqlite:///{tmp_path/'registration.db'}")
+    app.config["TESTING"] = False
+    test_client = app.test_client()
+    with test_client.session_transaction() as user_session:
+        user_session["csrf_token"] = "test-token"
+    response = test_client.post(
+        "/register",
+        data={
+            "name": "Test Patient",
+            "username": "testpatient",
+            "password": "securepass",
+            "csrf_token": "test-token",
+        },
+    )
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith("/patient")

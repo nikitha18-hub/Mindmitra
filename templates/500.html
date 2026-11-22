@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Unexpected Error - MindMitra{% endblock %}
+{% block content %}
+<section class="glass-panel" aria-labelledby="error-title">
+  <p class="eyebrow">Please try again</p>
+  <h1 id="error-title">MindMitra could not complete that request</h1>
+  <p><a class="button" href="{{ url_for('index') }}">Return home</a></p>
+</section>
+{% endblock %}

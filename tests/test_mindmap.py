@@ -37,3 +37,43 @@ def test_mindmap_create_read_delete(client):
 
     deleted = client.delete(f"/api/mindmap/nodes/{node_id}")
     assert deleted.status_code == 200
+
+
+def test_mindmap_update_persists(client):
+    created = client.post("/api/mindmap/nodes", json={
+        "patient_id": 1,
+        "label": "Old Name",
+        "category": "Family",
+        "description": "Old description.",
+    })
+    assert created.status_code == 201
+    node_id = created.get_json()["id"]
+
+    updated = client.put(f"/api/mindmap/nodes/{node_id}", json={
+        "label": "Meera",
+        "category": "Family",
+        "description": "Updated description.",
+    })
+    assert updated.status_code == 200
+
+    read = client.get("/api/mindmap/1")
+    node = next(item for item in read.get_json()["nodes"] if item["id"] == node_id)
+    assert node["label"] == "Meera"
+    assert node["description"] == "Updated description."
+
+
+def test_mindmap_edge_create_delete(client):
+    first = client.post("/api/mindmap/nodes", json={
+        "patient_id": 1, "label": "Garden", "category": "Places",
+    })
+    second = client.post("/api/mindmap/nodes", json={
+        "patient_id": 1, "label": "Meera", "category": "Family",
+    })
+    edge = client.post("/api/mindmap/edges", json={
+        "patient_id": 1,
+        "source": first.get_json()["id"],
+        "target": second.get_json()["id"],
+    })
+    assert edge.status_code == 201
+    deleted = client.delete(f"/api/mindmap/edges/{edge.get_json()['id']}")
+    assert deleted.status_code == 200

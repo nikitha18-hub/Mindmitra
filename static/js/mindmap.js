@@ -114,6 +114,12 @@
   if (editor) {
     const editorStatus = document.querySelector("#mindmap-editor-status");
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || "";
+    canvas.addEventListener("click", () => {
+      if (!selected) return;
+      editor.elements.label.value = selected.label || "";
+      editor.elements.description.value = selected.description || "";
+      editor.elements.category.value = selected.category || "Family";
+    });
     editor.addEventListener("submit", async (event) => {
       event.preventDefault();
       const patientId = document.querySelector("#mindmap-data")?.dataset.patientId || "1";
@@ -147,6 +153,30 @@
       });
       if (response.ok) {
         editorStatus.textContent = "Memory node deleted.";
+        load();
+      } else {
+        editorStatus.textContent = "Caregiver sign-in is required.";
+      }
+    });
+
+    document.querySelector("#update-selected-node").addEventListener("click", async () => {
+      if (!selected || !selected.id) {
+        editorStatus.textContent = "Select a memory node to update.";
+        return;
+      }
+      const body = {
+        label: editor.elements.label.value.trim(),
+        description: editor.elements.description.value.trim(),
+        category: editor.elements.category.value,
+      };
+      if (!body.label) return;
+      const response = await fetch(`/api/mindmap/nodes/${selected.id}`, {
+        method: "PUT",
+        headers: {"Content-Type": "application/json", "X-CSRF-Token": csrfToken},
+        body: JSON.stringify(body),
+      });
+      if (response.ok) {
+        editorStatus.textContent = "Memory node updated.";
         load();
       } else {
         editorStatus.textContent = "Caregiver sign-in is required.";

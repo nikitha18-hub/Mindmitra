@@ -18,6 +18,32 @@ from ai_engine.difficulty import recommend_difficulty
 
 
 def register_routes(app):
+    @app.get("/healthz")
+    def healthz():
+        connection = get_db(app)
+        connection.execute("SELECT 1").fetchone()
+        connection.close()
+        return jsonify({"status": "ok", "database": "reachable"})
+
+    @app.errorhandler(404)
+    def not_found(error):
+        if request.path.startswith("/api/"):
+            return jsonify({"error": "Resource not found."}), 404
+        return render_template("404.html"), 404
+
+    @app.errorhandler(413)
+    def upload_too_large(error):
+        if request.path.startswith("/api/"):
+            return jsonify({"error": "The upload exceeds the 10 MB limit."}), 413
+        return render_template("404.html"), 413
+
+    @app.errorhandler(500)
+    def internal_error(error):
+        app.logger.exception("Unhandled application error")
+        if request.path.startswith("/api/"):
+            return jsonify({"error": "An unexpected server error occurred."}), 500
+        return render_template("500.html"), 500
+
     def require_caregiver():
         if app.config["TESTING"]:
             return None
@@ -32,6 +58,10 @@ def register_routes(app):
     @app.get("/login")
     def login():
         return render_template("login.html")
+
+    @app.get("/register")
+    def register():
+        return render_template("register.html")
 
     @app.get("/patient")
     def patient():
@@ -140,6 +170,33 @@ def register_routes(app):
         session.update(user_id=user["id"], role=user["role"], name=user["name"])
         return redirect(url_for("caregiver" if user["role"] == "caregiver" else "patient"))
 
+    @app.post("/register")
+    def register_submit():
+        name = request.form.get("name", "").strip()
+        username = request.form.get("username", "").strip().lower()
+        password = request.form.get("password", "")
+        if len(name) < 2 or len(username) < 3 or len(password) < 6:
+            return render_template(
+                "register.html",
+                error="Enter a name, a username of at least 3 characters, and a password of at least 6 characters.",
+            )
+        connection = get_db(app)
+        existing = connection.execute(
+            "SELECT id FROM users WHERE username=?", (username,)
+        ).fetchone()
+        if existing:
+            connection.close()
+            return render_template("register.html", error="That username is already used.")
+        cursor = connection.execute(
+            "INSERT INTO users (name, username, password_hash, role) VALUES (?, ?, ?, 'patient')",
+            (name, username, generate_password_hash(password)),
+        )
+        connection.commit()
+        user_id = cursor.lastrowid
+        connection.close()
+        session.update(user_id=user_id, role="patient", name=name)
+        return redirect(url_for("patient"))
+
     @app.get("/logout")
     def logout():
         session.clear()
@@ -173,12 +230,18 @@ def register_routes(app):
 
     @app.get("/api/memories")
     def memories():
-        patient_id = session.get("user_id") or first_patient_id()
+        if session.get("role") == "caregiver":
+            patient_id = request.args.get("patient_id", type=int)
+        else:
+            patient_id = session.get("user_id") or first_patient_id()
         connection = get_db(app)
-        rows = connection.execute(
-            "SELECT * FROM memories WHERE patient_id = ? ORDER BY id",
-            (patient_id,),
-        ).fetchall()
+        if session.get("role") == "caregiver" and not patient_id:
+            rows = connection.execute("SELECT * FROM memories ORDER BY id DESC").fetchall()
+        else:
+            rows = connection.execute(
+                "SELECT * FROM memories WHERE patient_id = ? ORDER BY id",
+                (patient_id,),
+            ).fetchall()
         connection.close()
         return jsonify([dict(row) for row in rows])
 
@@ -258,6 +321,12 @@ def register_routes(app):
 
     @app.get("/api/mindmap/<int:patient_id>")
     def mindmap_patient(patient_id):
+        if not app.config["TESTING"]:
+            role = session.get("role")
+            if role not in {"caregiver", "patient"}:
+                return jsonify({"error": "Authentication required."}), 401
+            if role == "patient" and session.get("user_id") != patient_id:
+                return jsonify({"error": "You may view only your own memory map."}), 403
         connection = get_db(app)
         nodes = connection.execute(
             "SELECT * FROM mindmap_nodes WHERE patient_id = ?", (patient_id,)
@@ -402,12 +471,20 @@ def register_routes(app):
 
     @app.get("/api/reminders")
     def get_reminders():
-        patient_id = session.get("user_id") or first_patient_id()
+        if session.get("role") == "caregiver":
+            patient_id = request.args.get("patient_id", type=int)
+        else:
+            patient_id = session.get("user_id") or first_patient_id()
         connection = get_db(app)
-        rows = connection.execute(
-            "SELECT * FROM reminders WHERE patient_id = ? ORDER BY time_label",
-            (patient_id,),
-        ).fetchall()
+        if session.get("role") == "caregiver" and not patient_id:
+            rows = connection.execute(
+                "SELECT * FROM reminders ORDER BY time_label"
+            ).fetchall()
+        else:
+            rows = connection.execute(
+                "SELECT * FROM reminders WHERE patient_id = ? ORDER BY time_label",
+                (patient_id,),
+            ).fetchall()
         connection.close()
         return jsonify([dict(row) for row in rows])
 

@@ -14,6 +14,20 @@ python app.py
 
 Open `http://127.0.0.1:5000/`.
 
+## Environment
+
+Copy `.env.example` into the process environment. `.env` files must not be committed.
+
+- `SECRET_KEY`: required for production and should have at least 32 characters
+- `DATABASE_URL`: SQLite local URL, for example `sqlite:///mindmitra.db`
+- `APP_ENV`: `development` or `production`
+- `SESSION_COOKIE_SECURE`: `1` behind HTTPS
+- `HOST` and `PORT`: Flask listener settings
+
+## AWS readiness
+
+The repository includes EC2, RDS, S3, CloudWatch, and Terraform preparation documents. AWS resources are not automatically created. PostgreSQL support remains pending until database adapters and live RDS verification are completed.
+
 Demo accounts:
 
 - Patient: `asha` / `demo`
