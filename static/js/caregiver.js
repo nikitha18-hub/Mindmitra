@@ -15,4 +15,24 @@
     index ? context.lineTo(x, y) : context.moveTo(x, y);
   });
   context.stroke();
+
+  const reminderForm = document.querySelector("#caregiver-reminder-form");
+  if (reminderForm) {
+    reminderForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const status = document.querySelector("#caregiver-form-status");
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || "";
+      const response = await fetch("/api/reminders", {
+        method: "POST",
+        headers: {"Content-Type": "application/json", "X-CSRF-Token": csrfToken},
+        body: JSON.stringify({
+          title: reminderForm.elements.title.value.trim(),
+          time_label: reminderForm.elements.time_label.value,
+        }),
+      });
+      const result = await response.json();
+      status.textContent = response.ok ? "Reminder added." : (result.error || "Could not add reminder.");
+      if (response.ok) reminderForm.reset();
+    });
+  }
 })();

@@ -10,11 +10,29 @@
     <h1 id="library-title">Memory Library</h1>
   </header>
   <div class="memory-library">
-    <article class="memory-photo glass-panel"><span aria-hidden="true">❀</span><h2>Blue garden</h2><p>Mysore, a sunny afternoon</p></article>
-    <article class="memory-photo glass-panel"><span aria-hidden="true">♫</span><h2>Sunday music</h2><p>A favourite old song</p></article>
-    <article class="memory-photo glass-panel"><span aria-hidden="true">♡</span><h2>Family birthday</h2><p>Blue table and warm light</p></article>
+    {% for memory in memories %}
+    <article class="memory-photo glass-panel">
+      {% if memory.photo_url %}
+      <img src="{{ memory.photo_url }}" alt="">
+      {% else %}
+      <span aria-hidden="true">✦</span>
+      {% endif %}
+      <h2>{{ memory.title }}</h2>
+      <p>{{ memory.description }}</p>
+    </article>
+    {% else %}
+    <article class="memory-photo glass-panel"><h2>No memories yet</h2><p>A caregiver can add the first memory.</p></article>
+    {% endfor %}
   </div>
   <button class="button button-primary" type="button" id="memory-film">Play Memory Film</button>
+  {% if current_role == "caregiver" %}
+  <form class="glass-panel upload-panel" id="memory-upload-form">
+    <h2>Add a family photo</h2>
+    <label for="memory-upload">Choose an image</label>
+    <input id="memory-upload" name="file" type="file" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp">
+    <p id="upload-status" aria-live="polite"></p>
+  </form>
+  {% endif %}
 </section>
 {% endblock %}
 {% block scripts %}

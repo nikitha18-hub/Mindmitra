@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#04111d">
+    <meta name="csrf-token" content="{{ csrf_token }}">
     <meta name="description" content="MindMitra is a supportive dementia-engagement platform.">
     <title>{% block title %}MindMitra{% endblock %}</title>
 
@@ -24,6 +25,8 @@
         <a href="{{ url_for('patient') }}">Patient</a>
         <a href="{{ url_for('caregiver') }}">Caregiver</a>
         <a href="{{ url_for('login') }}">Login</a>
+        {% if current_name %}<span class="nav-user">{{ current_name }}</span>{% endif %}
+        {% if current_name %}<a href="{{ url_for('logout') }}">Logout</a>{% endif %}
         <button class="calm-toggle" type="button" data-calm-toggle aria-pressed="false">
           <span class="calm-toggle-label">Calm Mode: Off</span>
         </button>

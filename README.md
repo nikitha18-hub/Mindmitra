@@ -19,6 +19,14 @@ Demo accounts:
 - Patient: `asha` / `demo`
 - Caregiver: `meera` / `demo`
 
+For production, set `SECRET_KEY` and `DATABASE_URL` from `.env.example` without committing real secrets.
+
+Deploy with a production WSGI server:
+
+```bash
+gunicorn --bind 0.0.0.0:5000 app:app
+```
+
 ## Test
 
 ```powershell

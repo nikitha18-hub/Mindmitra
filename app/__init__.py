@@ -1,5 +1,9 @@
 from flask import Flask
 import os
+import secrets
+from hmac import compare_digest
+
+from flask import abort, request, session
 
 from app.database import init_db
 
@@ -12,7 +16,7 @@ def create_app(database_uri=None):
     )
 
     app.config.update(
-        SECRET_KEY="dev-only-change-in-production",
+        SECRET_KEY=os.getenv("SECRET_KEY", "dev-only-change-in-production"),
         SQLALCHEMY_DATABASE_URI=database_uri or os.getenv("DATABASE_URL", "sqlite:///mindmitra.db"),
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
         MAX_CONTENT_LENGTH=10 * 1024 * 1024,
@@ -30,6 +34,35 @@ def create_app(database_uri=None):
     else:
         app.config["DATABASE_PATH"] = os.path.join(app.instance_path, "mindmitra.db")
     init_db(app)
+
+    @app.before_request
+    def csrf_and_session_guard():
+        if "csrf_token" not in session:
+            session["csrf_token"] = secrets.token_urlsafe(32)
+        if not app.config["TESTING"] and request.method in {"POST", "PUT", "PATCH", "DELETE"}:
+            if request.path.startswith("/api/") or request.path in {"/login"}:
+                supplied = request.headers.get("X-CSRF-Token") or request.form.get("csrf_token")
+                if not supplied or not compare_digest(supplied, session["csrf_token"]):
+                    abort(403)
+
+    @app.context_processor
+    def inject_template_globals():
+        return {
+            "csrf_token": session.get("csrf_token", ""),
+            "current_role": session.get("role"),
+            "current_name": session.get("name"),
+        }
+
+    @app.after_request
+    def security_headers(response):
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("X-Frame-Options", "DENY")
+        response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+        response.headers.setdefault(
+            "Permissions-Policy",
+            "camera=(), microphone=(self), geolocation=()",
+        )
+        return response
 
     from app.routes import register_routes
 

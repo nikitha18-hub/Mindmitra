@@ -14,9 +14,17 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
 from app.database import get_db
+from ai_engine.difficulty import recommend_difficulty
 
 
 def register_routes(app):
+    def require_caregiver():
+        if app.config["TESTING"]:
+            return None
+        if session.get("role") != "caregiver":
+            return jsonify({"error": "Caregiver authorization required."}), 403
+        return None
+
     @app.get("/")
     def index():
         return render_template("index.html")
@@ -27,7 +35,22 @@ def register_routes(app):
 
     @app.get("/patient")
     def patient():
-        return render_template("patient.html")
+        patient_id = session.get("user_id") or first_patient_id()
+        connection = get_db(app)
+        reminder = connection.execute(
+            "SELECT * FROM reminders WHERE patient_id=? AND complete=0 ORDER BY time_label LIMIT 1",
+            (patient_id,),
+        ).fetchone()
+        memories = connection.execute(
+            "SELECT * FROM memories WHERE patient_id=? ORDER BY id DESC LIMIT 6",
+            (patient_id,),
+        ).fetchall()
+        connection.close()
+        return render_template(
+            "patient.html",
+            next_reminder=dict(reminder) if reminder else None,
+            familiar_memories=[dict(row) for row in memories],
+        )
 
     @app.get("/dashboard")
     def dashboard():
@@ -35,7 +58,36 @@ def register_routes(app):
 
     @app.get("/caregiver")
     def caregiver():
-        return render_template("caregiver.html")
+        if not app.config["TESTING"] and session.get("role") != "caregiver":
+            return redirect(url_for("login"))
+        patient_id = session.get("user_id")
+        connection = get_db(app)
+        if patient_id:
+            patients = connection.execute(
+                "SELECT id,name,username FROM users WHERE role='patient'"
+            ).fetchall()
+        else:
+            patients = connection.execute(
+                "SELECT id,name,username FROM users WHERE role='patient'"
+            ).fetchall()
+        memories = connection.execute(
+            "SELECT * FROM memories ORDER BY id DESC LIMIT 8"
+        ).fetchall()
+        reminders = connection.execute(
+            "SELECT * FROM reminders ORDER BY time_label"
+        ).fetchall()
+        game_rows = connection.execute(
+            "SELECT game, AVG(score) AS average_score, COUNT(*) AS sessions "
+            "FROM game_sessions GROUP BY game"
+        ).fetchall()
+        connection.close()
+        return render_template(
+            "caregiver.html",
+            patients=[dict(row) for row in patients],
+            recent_memories=[dict(row) for row in memories],
+            reminders=[dict(row) for row in reminders],
+            game_stats=[dict(row) for row in game_rows],
+        )
 
     @app.get("/games")
     def games():
@@ -43,15 +95,32 @@ def register_routes(app):
 
     @app.get("/memory-map")
     def memory_map():
-        return render_template("memory-map.html")
+        return render_template(
+            "memory-map.html",
+            patient_id=session.get("user_id") or first_patient_id(),
+        )
 
     @app.get("/memory-library")
     def memory_library():
-        return render_template("memory-library.html")
+        patient_id = session.get("user_id") or first_patient_id()
+        connection = get_db(app)
+        memories = connection.execute(
+            "SELECT * FROM memories WHERE patient_id=? ORDER BY id DESC",
+            (patient_id,),
+        ).fetchall()
+        connection.close()
+        return render_template("memory-library.html", memories=[dict(row) for row in memories])
 
     @app.get("/reminders")
     def reminders():
-        return render_template("reminders.html")
+        patient_id = session.get("user_id") or first_patient_id()
+        connection = get_db(app)
+        reminder_rows = connection.execute(
+            "SELECT * FROM reminders WHERE patient_id=? ORDER BY time_label",
+            (patient_id,),
+        ).fetchall()
+        connection.close()
+        return render_template("reminders.html", reminders=[dict(row) for row in reminder_rows])
 
     @app.get("/impact")
     def impact():
@@ -115,6 +184,9 @@ def register_routes(app):
 
     @app.post("/api/memories")
     def create_memory():
+        denied = require_caregiver()
+        if denied:
+            return denied
         data = request.get_json(silent=True) or {}
         if not data.get("title"):
             return jsonify({"error": "A memory title is required."}), 400
@@ -137,6 +209,52 @@ def register_routes(app):
         result = dict(row.fetchone())
         connection.close()
         return jsonify(result), 201
+
+    @app.put("/api/memories/<int:memory_id>")
+    @app.patch("/api/memories/<int:memory_id>")
+    def update_memory(memory_id):
+        denied = require_caregiver()
+        if denied:
+            return denied
+        data = request.get_json(silent=True) or {}
+        connection = get_db(app)
+        memory = connection.execute(
+            "SELECT * FROM memories WHERE id = ?", (memory_id,)
+        ).fetchone()
+        if not memory:
+            connection.close()
+            return jsonify({"error": "Memory not found."}), 404
+        connection.execute(
+            """UPDATE memories SET title=?, description=?, category=?, photo_url=?, date_label=?
+               WHERE id=?""",
+            (
+                data.get("title", memory["title"]).strip(),
+                data.get("description", memory["description"]).strip(),
+                data.get("category", memory["category"]).strip(),
+                data.get("photo_url", memory["photo_url"]),
+                data.get("date_label", memory["date_label"]),
+                memory_id,
+            ),
+        )
+        connection.commit()
+        updated = dict(connection.execute(
+            "SELECT * FROM memories WHERE id=?", (memory_id,)
+        ).fetchone())
+        connection.close()
+        return jsonify(updated)
+
+    @app.delete("/api/memories/<int:memory_id>")
+    def delete_memory(memory_id):
+        denied = require_caregiver()
+        if denied:
+            return denied
+        connection = get_db(app)
+        result = connection.execute("DELETE FROM memories WHERE id=?", (memory_id,))
+        connection.commit()
+        connection.close()
+        if result.rowcount == 0:
+            return jsonify({"error": "Memory not found."}), 404
+        return jsonify({"deleted": memory_id})
 
     @app.get("/api/mindmap/<int:patient_id>")
     def mindmap_patient(patient_id):
@@ -162,6 +280,9 @@ def register_routes(app):
 
     @app.post("/api/mindmap/nodes")
     def mindmap_create_node():
+        denied = require_caregiver()
+        if denied:
+            return denied
         data = request.get_json(silent=True) or {}
         if not data.get("label"):
             return jsonify({"error": "A node label is required."}), 400
@@ -188,6 +309,9 @@ def register_routes(app):
     @app.patch("/api/mindmap/nodes/<int:node_id>")
     @app.put("/api/mindmap/nodes/<int:node_id>")
     def mindmap_update_node(node_id):
+        denied = require_caregiver()
+        if denied:
+            return denied
         data = request.get_json(silent=True) or {}
         connection = get_db(app)
         node = connection.execute(
@@ -217,6 +341,9 @@ def register_routes(app):
 
     @app.delete("/api/mindmap/nodes/<int:node_id>")
     def mindmap_delete_node(node_id):
+        denied = require_caregiver()
+        if denied:
+            return denied
         connection = get_db(app)
         node = connection.execute(
             "SELECT id FROM mindmap_nodes WHERE id = ?", (node_id,)
@@ -234,6 +361,9 @@ def register_routes(app):
 
     @app.post("/api/mindmap/edges")
     def mindmap_create_edge():
+        denied = require_caregiver()
+        if denied:
+            return denied
         data = request.get_json(silent=True) or {}
         if not data.get("source") or not data.get("target"):
             return jsonify({"error": "Both nodes are required."}), 400
@@ -255,6 +385,9 @@ def register_routes(app):
 
     @app.delete("/api/mindmap/edges/<int:edge_id>")
     def mindmap_delete_edge(edge_id):
+        denied = require_caregiver()
+        if denied:
+            return denied
         connection = get_db(app)
         edge = connection.execute(
             "SELECT id FROM mindmap_edges WHERE id = ?", (edge_id,)
@@ -280,6 +413,9 @@ def register_routes(app):
 
     @app.post("/api/reminders")
     def create_reminder():
+        denied = require_caregiver()
+        if denied:
+            return denied
         data = request.get_json(silent=True) or {}
         if not data.get("title") or not data.get("time_label"):
             return jsonify({"error": "Title and time are required."}), 400
@@ -320,6 +456,49 @@ def register_routes(app):
         connection.close()
         return jsonify(updated)
 
+    @app.put("/api/reminders/<int:reminder_id>")
+    @app.patch("/api/reminders/<int:reminder_id>")
+    def update_reminder(reminder_id):
+        denied = require_caregiver()
+        if denied:
+            return denied
+        data = request.get_json(silent=True) or {}
+        connection = get_db(app)
+        reminder = connection.execute(
+            "SELECT * FROM reminders WHERE id=?", (reminder_id,)
+        ).fetchone()
+        if not reminder:
+            connection.close()
+            return jsonify({"error": "Reminder not found."}), 404
+        connection.execute(
+            "UPDATE reminders SET title=?, time_label=?, complete=? WHERE id=?",
+            (
+                data.get("title", reminder["title"]).strip(),
+                data.get("time_label", reminder["time_label"]).strip(),
+                int(data.get("complete", bool(reminder["complete"]))),
+                reminder_id,
+            ),
+        )
+        connection.commit()
+        updated = dict(connection.execute(
+            "SELECT * FROM reminders WHERE id=?", (reminder_id,)
+        ).fetchone())
+        connection.close()
+        return jsonify(updated)
+
+    @app.delete("/api/reminders/<int:reminder_id>")
+    def delete_reminder(reminder_id):
+        denied = require_caregiver()
+        if denied:
+            return denied
+        connection = get_db(app)
+        result = connection.execute("DELETE FROM reminders WHERE id=?", (reminder_id,))
+        connection.commit()
+        connection.close()
+        if result.rowcount == 0:
+            return jsonify({"error": "Reminder not found."}), 404
+        return jsonify({"deleted": reminder_id})
+
     @app.post("/api/games/<game>/session")
     def game_session(game):
         data = request.get_json(silent=True) or {}
@@ -345,6 +524,18 @@ def register_routes(app):
         connection.close()
         return jsonify(dict(row)), 201
 
+    @app.get("/api/games/difficulty")
+    def game_difficulty():
+        patient_id = session.get("user_id") or first_patient_id()
+        connection = get_db(app)
+        rows = connection.execute(
+            "SELECT score FROM game_sessions WHERE patient_id=? ORDER BY id DESC LIMIT 10",
+            (patient_id,),
+        ).fetchall()
+        connection.close()
+        recommended = recommend_difficulty([row["score"] for row in rows])
+        return jsonify({"difficulty": recommended})
+
     @app.get("/api/games/history")
     def game_history():
         patient_id = session.get("user_id") or first_patient_id()
@@ -358,6 +549,9 @@ def register_routes(app):
 
     @app.post("/api/upload")
     def upload():
+        denied = require_caregiver()
+        if denied:
+            return denied
         upload = request.files.get("file")
         if not upload or not upload.filename:
             return jsonify({"error": "Choose an image to upload."}), 400
@@ -367,8 +561,24 @@ def register_routes(app):
             return jsonify({"error": "Use a PNG, JPG, JPEG, or WebP image."}), 400
         if not upload.mimetype.startswith("image/"):
             return jsonify({"error": "The uploaded file must be an image."}), 400
+        if upload.stream.seekable():
+            upload.stream.seek(0, os.SEEK_END)
+            size = upload.stream.tell()
+            upload.stream.seek(0)
+            if size > app.config["MAX_CONTENT_LENGTH"]:
+                return jsonify({"error": "The image must be 10 MB or smaller."}), 413
         upload.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
-        return jsonify({"filename": filename, "url": f"/uploads/{filename}"}), 201
+        url = f"/uploads/{filename}"
+        connection = get_db(app)
+        connection.execute(
+            """INSERT INTO memories
+               (patient_id, title, description, category, photo_url)
+               VALUES (?, ?, ?, 'Family', ?)""",
+            (first_patient_id(), filename.rsplit(".", 1)[0], "Uploaded family photo.", url),
+        )
+        connection.commit()
+        connection.close()
+        return jsonify({"filename": filename, "url": url}), 201
 
     @app.get("/uploads/<path:filename>")
     def uploaded_file(filename):

@@ -19,4 +19,26 @@
       button.textContent = "Play Memory Film";
     };
   });
+
+  const uploadForm = document.querySelector("#memory-upload-form");
+  const uploadStatus = document.querySelector("#upload-status");
+  if (uploadForm) {
+    uploadForm.querySelector("input").addEventListener("change", async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      const body = new FormData();
+      body.append("file", file);
+      uploadStatus.textContent = "Uploading...";
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || "";
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        headers: {"X-CSRF-Token": csrfToken},
+        body,
+      });
+      const result = await response.json();
+      uploadStatus.textContent = response.ok
+        ? "Photo uploaded. Refresh to include it in the library."
+        : result.error || "Upload failed.";
+    });
+  }
 })();

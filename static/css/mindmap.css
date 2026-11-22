@@ -27,6 +27,22 @@
   align-self: center;
 }
 
+.mindmap-editor {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.mindmap-editor input,
+.mindmap-editor select {
+  min-height: 48px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  color: var(--white-soft);
+  background: rgba(2,17,29,.72);
+}
+
 .memory-library {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

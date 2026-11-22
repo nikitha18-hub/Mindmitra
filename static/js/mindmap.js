@@ -63,7 +63,8 @@
 
   const load = async () => {
     try {
-      const response = await fetch("/api/mindmap/1");
+      const patientId = document.querySelector("#mindmap-data")?.dataset.patientId || "1";
+      const response = await fetch(`/api/mindmap/${patientId}`);
       const data = await response.json();
       nodes = data.nodes;
       edges = data.edges;
@@ -108,5 +109,49 @@
     resize();
     draw();
   });
+
+  const editor = document.querySelector("#mindmap-editor");
+  if (editor) {
+    const editorStatus = document.querySelector("#mindmap-editor-status");
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || "";
+    editor.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const patientId = document.querySelector("#mindmap-data")?.dataset.patientId || "1";
+      const body = {
+        patient_id: Number(patientId),
+        label: editor.elements.label.value.trim(),
+        description: editor.elements.description.value.trim(),
+        category: editor.elements.category.value,
+      };
+      if (!body.label) return;
+      const response = await fetch("/api/mindmap/nodes", {
+        method: "POST",
+        headers: {"Content-Type": "application/json", "X-CSRF-Token": csrfToken},
+        body: JSON.stringify(body),
+      });
+      if (response.ok) {
+        editorStatus.textContent = "Memory node added.";
+        editor.reset();
+        load();
+      } else {
+        editorStatus.textContent = "Caregiver sign-in is required.";
+      }
+    });
+
+    document.querySelector("#delete-selected-node").addEventListener("click", async () => {
+      if (!selected || !selected.id) return;
+      if (!window.confirm("Delete this memory node and its connections?")) return;
+      const response = await fetch(`/api/mindmap/nodes/${selected.id}`, {
+        method: "DELETE",
+        headers: {"X-CSRF-Token": csrfToken},
+      });
+      if (response.ok) {
+        editorStatus.textContent = "Memory node deleted.";
+        load();
+      } else {
+        editorStatus.textContent = "Caregiver sign-in is required.";
+      }
+    });
+  }
   load();
 })();

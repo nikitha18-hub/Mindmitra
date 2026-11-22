@@ -7,9 +7,15 @@
     <h1 id="reminders-title">Gentle Reminders</h1>
   </header>
   <div class="reminder-timeline" id="reminder-timeline">
-    <article class="glass-panel reminder-item"><time>09:00</time><h2>Drink a glass of water</h2><button type="button" data-complete>Mark complete</button></article>
-    <article class="glass-panel reminder-item"><time>11:30</time><h2>Look at the family photo</h2><button type="button" data-complete>Mark complete</button></article>
-    <article class="glass-panel reminder-item"><time>16:00</time><h2>Sit in the garden</h2><button type="button" data-complete>Mark complete</button></article>
+    {% for reminder in reminders %}
+    <article class="glass-panel reminder-item{% if reminder.complete %} completed{% endif %}" data-id="{{ reminder.id }}">
+      <time>{{ reminder.time_label }}</time>
+      <h2>{{ reminder.title }}</h2>
+      <button type="button" data-complete data-id="{{ reminder.id }}">{{ "Completed" if reminder.complete else "Mark complete" }}</button>
+    </article>
+    {% else %}
+    <article class="glass-panel reminder-item"><h2>No reminders today</h2></article>
+    {% endfor %}
   </div>
 </section>
 {% endblock %}

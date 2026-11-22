@@ -21,8 +21,13 @@
 
   <article class="glass-panel reminder-card" aria-labelledby="next-reminder">
     <p class="eyebrow">Next reminder</p>
-    <h2 id="next-reminder">Drink a glass of water</h2>
-    <p>At 9:00 AM</p>
+    {% if next_reminder %}
+    <h2 id="next-reminder">{{ next_reminder.title }}</h2>
+    <p>At {{ next_reminder.time_label }}</p>
+    {% else %}
+    <h2 id="next-reminder">Nothing urgent right now</h2>
+    <p>Enjoy a calm moment.</p>
+    {% endif %}
   </article>
 
   <section class="glass-panel voice-panel" aria-labelledby="voice-title">
