@@ -644,8 +644,26 @@ def register_routes(app):
             upload.stream.seek(0)
             if size > app.config["MAX_CONTENT_LENGTH"]:
                 return jsonify({"error": "The image must be 10 MB or smaller."}), 413
-        upload.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
-        url = f"/uploads/{filename}"
+        bucket = os.getenv("S3_BUCKET")
+        if bucket:
+            try:
+                import boto3
+            except ImportError as error:
+                return jsonify({"error": "S3 storage support requires boto3."}), 500
+            s3 = boto3.client(
+                "s3",
+                region_name=os.getenv("AWS_REGION", "us-east-1"),
+            )
+            key = f"mindmitra/uploads/{filename}"
+            s3.upload_fileobj(upload.stream, bucket, key, ExtraArgs={"ContentType": upload.mimetype})
+            url = s3.generate_presigned_url(
+                "get_object",
+                Params={"Bucket": bucket, "Key": key},
+                ExpiresIn=3600,
+            )
+        else:
+            upload.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+            url = f"/uploads/{filename}"
         connection = get_db(app)
         connection.execute(
             """INSERT INTO memories

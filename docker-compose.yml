@@ -1,0 +1,29 @@
+services:
+  app:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      APP_ENV: production
+      SECRET_KEY: ${SECRET_KEY:-change-this-local-compose-secret-before-use}
+      DATABASE_URL: postgresql://mindmitra:mindmitra@db:5432/mindmitra
+      SESSION_COOKIE_SECURE: "0"
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: mindmitra
+      POSTGRES_USER: mindmitra
+      POSTGRES_PASSWORD: mindmitra
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mindmitra -d mindmitra"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - mindmitra-postgres:/var/lib/postgresql/data
+
+volumes:
+  mindmitra-postgres:

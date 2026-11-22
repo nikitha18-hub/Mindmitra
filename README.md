@@ -14,6 +14,14 @@ python app.py
 
 Open `http://127.0.0.1:5000/`.
 
+## Docker with PostgreSQL
+
+```powershell
+docker compose up --build
+```
+
+The PostgreSQL service is available to the Flask container at `postgresql://mindmitra:mindmitra@db:5432/mindmitra`.
+
 ## Environment
 
 Copy `.env.example` into the process environment. `.env` files must not be committed.
@@ -26,7 +34,7 @@ Copy `.env.example` into the process environment. `.env` files must not be commi
 
 ## AWS readiness
 
-The repository includes EC2, RDS, S3, CloudWatch, and Terraform preparation documents. AWS resources are not automatically created. PostgreSQL support remains pending until database adapters and live RDS verification are completed.
+The repository includes PostgreSQL support, Docker Compose, optional S3 uploads, EC2/RDS/S3/IAM/Secrets Manager Terraform, and GitHub Actions CI. AWS resources are not automatically created. Live RDS, EC2, Docker, Terraform, and S3 verification require credentials and tools that are not available in this environment.
 
 Demo accounts:
 
@@ -49,4 +57,4 @@ python -m pytest -q
 
 ## Stack
 
-Python, Flask, SQLAlchemy, SQLite, Jinja, vanilla JavaScript, and CSS. AWS storage and database adapters can be added after the local experience is stable.
+Python, Flask, SQLite, PostgreSQL-compatible database adapter, Jinja, vanilla JavaScript, CSS, Docker, and AWS SDK integration.

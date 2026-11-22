@@ -9,4 +9,14 @@ Provision only after local behavior is stable and deployment costs are approved.
 5. Set `DATABASE_URL`, `SECRET_KEY`, and upload configuration through environment or secrets management.
 6. Configure CloudWatch logs and alarms.
 
-MindMitra currently uses SQLite in the checked-in application. PostgreSQL migration is prepared through environment configuration, but it is not complete until the data access layer and connection test are adapted and executed against RDS.
+MindMitra supports SQLite locally and PostgreSQL through `DATABASE_URL` or AWS Secrets Manager. PostgreSQL schema initialization is implemented; live RDS connection verification still requires AWS credentials and provisioning.
+
+Infrastructure template:
+
+```powershell
+cd cloud/terraform
+terraform init
+terraform plan -var="upload_bucket_name=your-globally-unique-mindmitra-uploads"
+```
+
+Provision only after cost and account approval. Set `AWS_SECRETS_MANAGER_ID` to a JSON secret containing `database_url` and `secret_key`. EC2 uses its IAM instance profile to read the secret and S3 bucket.

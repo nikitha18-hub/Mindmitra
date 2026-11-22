@@ -1,0 +1,22 @@
+name: Tests
+
+on:
+  push:
+    branches: ["demo-module", "main"]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -r requirements.txt
+      - run: python -m pytest -q
+      - run: python -m compileall -q app ai_engine caregiver games mindmap reminders seed_demo.py

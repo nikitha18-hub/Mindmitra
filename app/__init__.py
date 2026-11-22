@@ -12,6 +12,22 @@ from app.database import init_db
 def create_app(database_uri=None):
     environment = os.getenv("APP_ENV", "development").lower()
     configured_secret = os.getenv("SECRET_KEY")
+    aws_secret_id = os.getenv("AWS_SECRETS_MANAGER_ID")
+    if aws_secret_id:
+        try:
+            import boto3
+            import json
+            secret = boto3.client(
+                "secretsmanager",
+                region_name=os.getenv("AWS_REGION", "us-east-1"),
+            ).get_secret_value(SecretId=aws_secret_id)
+            values = json.loads(secret["SecretString"])
+            if not configured_secret:
+                configured_secret = values.get("secret_key")
+            if not database_uri:
+                database_uri = values.get("database_url")
+        except Exception as error:
+            raise RuntimeError("Could not load AWS Secrets Manager configuration.") from error
     if environment == "production" and (not configured_secret or len(configured_secret) < 32):
         raise RuntimeError("APP_ENV=production requires SECRET_KEY with at least 32 characters.")
 
@@ -39,10 +55,6 @@ def create_app(database_uri=None):
 
     os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
     database_uri = app.config["SQLALCHEMY_DATABASE_URI"]
-    if database_uri and not database_uri.startswith("sqlite"):
-        raise RuntimeError(
-            "Only SQLite is active in this build. PostgreSQL migration is documented but not configured."
-        )
     if database_uri.startswith("sqlite:///"):
         database_path = database_uri.replace("sqlite:///", "", 1)
         if not os.path.isabs(database_path) and "/" not in database_path and "\\" not in database_path:
